@@ -1,76 +1,55 @@
 # Author: Erel Dagan, DevOps Engineer. ereldag18@gmail.com
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-import time
-import argparse
-import csv
+
+from ast import main
+from cProfile import label
+from mimetypes import init
+from re import A
+from tkinter.tix import ROW
+from turtle import color
+from pytube import YouTube
+from pytube import Playlist
+import tkinter as tk
 import os
 
-# Function to convert and dwonload youtube videos
+BG_COLOR = "#181818"
+FG_COLOR = "#A80000"
+COL_SIZE = 5
+ROW_SIZE = 5
 
 
-def convert_download(url):
-    driver.get("https://ytmp3.cc/en9/")
-    url_input = driver.find_element_by_id('input')
-    url_input.send_keys(url)
-    convert_button = driver.find_element_by_id('submit')
-    convert_button.click()
-    time.sleep(1.5)
-    download_button = driver.find_elements_by_link_text('Download')
-    try:
-        download_button = download_button[0]
-    except:
-        time.sleep(20)
-        download_button = driver.find_elements_by_link_text('Download')
-        download_button = download_button[0]
-    download_button.click()
-    time.sleep(2)
+def init_root():
+    root = tk.Tk()
+    root.title("Youtube downloader and cd burner")
+    root.configure(bg=BG_COLOR)
+    for i in range(COL_SIZE):
+        root.columnconfigure(i, weight=1, minsize=75)
+        for j in range(ROW_SIZE):
+            root.rowconfigure(j, weight=1, minsize=50)
+
+    return root
 
 
-chromedriver = r"{}\chromedriver.exe".format(
-    os.path.dirname(os.path.realpath(__file__)))
-downloads_path = r"{}\downloads".format(
-    os.path.dirname(os.path.realpath(__file__)))
+def menu():
+    welcome_label = tk.Label(text="welcome!", font=(
+        "Arial", "25"), fg=FG_COLOR, bg=BG_COLOR)
+    welcome_label.grid(column=2, row=0)
+    title_label = tk.Label(text="YouTube downloader", font=(
+        "Arial", "25"), fg=FG_COLOR, bg=BG_COLOR)
+    title_label.grid(column=0, row=0)
+    menu = []
+    for i in range(1, ROW_SIZE):
+        btn = tk.Button(text="click", fg=FG_COLOR,
+                        command=lambda: change(welcome_label))
+        btn.grid(row=i, column=0)
+        menu.append(btn)
+    menu[0].configure(text="")
 
-# Arguments Parser
-parser = argparse.ArgumentParser()
-parser.add_argument('-u', '--url', dest='url',
-                    help="url from youtube to be Downloaded")
-parser.add_argument('-b', '--bin-location', dest='bin', help="Path for the .exe file of chrome",
-                    default=r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-parser.add_argument('-f', '--csv-file', dest='csv',
-                    help="Path for csv file wirh urls to be downloaded")
-parser.add_argument('-c', '--chrome-driver', dest='chromedriver',
-                    help="Path to chrome driver location", default=chromedriver)
-parser.add_argument('-d', '--download-path', dest='downloads_path',
-                    help="Path for files to be dowloaded to", default=downloads_path)
-args = parser.parse_args()
 
-# Arguments validation
-if not args.csv and not args.url:
-    raise parser.error('Must Enter url or csv path')
-elif args.csv and args.url:
-    raise parser.error('Enter url OR csv path')
+def main():
+    root = init_root()
+    menu()
+    root.mainloop()
 
-if not os.path.exists(downloads_path):
-    os.mkdir(downloads_path)
 
-# Creates the chrome driver with custom options
-options = webdriver.ChromeOptions()
-prefs = {"download.default_directory": args.downloads_path}
-options.add_experimental_option("prefs", prefs)
-options.binary_location = args.bin
-driver = webdriver.Chrome(options=options, executable_path=args.chromedriver, )
-
-# Check if csv path was entered
-if args.csv:
-    with open(f'{args.csv}', newline='') as csv_file:
-        reader = csv.reader(csv_file)
-        for url in reader:
-            convert_download(url)
-            print(f"Succesfully downloaded {url}!")
-elif args.url:
-    convert_download(args.url)
-    print(f"Succesfully downloaded {args.url}!")
-
-driver.quit()
+if __name__ == '__main__':
+    main()
