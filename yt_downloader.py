@@ -1,11 +1,5 @@
 # Author: Erel Dagan, DevOps Engineer. ereldag18@gmail.com
 
-from ast import main
-from cProfile import label
-from mimetypes import init
-from re import A
-from tkinter.tix import ROW
-from turtle import color
 from pytube import YouTube
 from pytube import Playlist
 import tkinter as tk
@@ -39,7 +33,7 @@ def menu():
     menu = []
     for i in range(1, ROW_SIZE):
         btn = tk.Button(text="click", fg=FG_COLOR,
-                        command=lambda: change(welcome_label))
+                        command=lambda: print("clicked"))
         btn.grid(row=i, column=0)
         menu.append(btn)
     menu[0].configure(text="")
