@@ -10,28 +10,39 @@ import os
 sg.theme("DarkBrown4")
 
 # ----------- Create the 3 layouts this Window will display -----------
-single_file_layout = [[sg.Text('download single song')],
-                      [sg.Text("youtube song URL:"), sg.InputText(
-                          key='-IN-single-song-url')],
-                      [sg.Submit(key='-SUB-download single song-')]]
 
-multiple_from_csv_layout = [[sg.Text('download all songs from csv')],
-                            [sg.Input(key='-IN-')],
-                            [sg.Input(key='-IN2-')]]
 
-playlist_layout = [[sg.Text('download all songs in playlist')],
-                   [sg.Text("youtube playlist URL:"),
-                    sg.InputText(key='-IN-playlist-url')],
-                   [sg.Submit()]]
+def create_single_song_layout(action):
+    layout = [[sg.Text(action)],
+              [sg.Text("youtube song URL:"), sg.InputText(
+                  key=f'-IN-{action}-')],
+              [sg.Submit(key=f'-SUB-{action}-')]]
+    return sg.Column(layout, key=f'-COL-{action}-', visible=False)
+
+
+def create_csv_layout(action):
+    layout = [[sg.Text(action)],
+              [sg.Input(key=f'-IN-{action}-')],
+              [sg.Input(key=f'-IN2-{action}-')]]
+    return sg.Column(layout, key=f'-COL-{action}-', visible=False)
+
+
+def create_playlist_layout(action):
+    layout = [[sg.Text(action)],
+              [sg.Text("youtube playlist URL:"),
+               sg.InputText(key=f'-IN-{action}-')],
+              [sg.Submit()]]
+    return sg.Column(layout, key=f'-COL-{action}-', visible=False)
+
 
 # ----------- Create actual layout using Columns and a row of Buttons
-MENU = {"download single song": single_file_layout,
-        "download songs from csv": multiple_from_csv_layout, "download playlist": playlist_layout}
+MENU = {"download single song": create_single_song_layout,
+        "download songs from csv": create_csv_layout, "download playlist": create_playlist_layout}
 
 cols = []
 menu_btns = []
-for action, layout in MENU.items():
-    cols.append(sg.Column(layout, key=f'-COL-{action}-', visible=False))
+for action, create_col in MENU.items():
+    cols.append(create_col(action))
     menu_btns.append(sg.Button(action))
 
 window = sg.Window('Swapping the contents of a window', [cols, menu_btns])
