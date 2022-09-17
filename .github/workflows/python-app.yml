@@ -40,7 +40,7 @@ jobs:
 
       - name: convert to exe
         run: |
-          pyinstaller -n yt_downloader yt_downloader.py
+          pyinstaller -n yt_downloader --noconsole yt_downloader.py
 
       - name: upload exe as artifact
         uses: actions/upload-artifact@v3
