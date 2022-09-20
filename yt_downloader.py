@@ -9,6 +9,14 @@ import os
 # ----------- download functions -----------
 
 
+def update_progress_Bar(self, file_handle, bytes_remaining):
+    print(bytes_remaining)
+
+
+def complete_progress_bar(stream, file_handle):
+    pass
+
+
 def download_song(url, file_name, file_path, output):
     if '.' not in file_name:
         file_name = file_name + ".mp3"
@@ -17,7 +25,8 @@ def download_song(url, file_name, file_path, output):
         # TODO: add validation output
     else:
         try:
-            yt = YouTube(url)
+            yt = YouTube(url, on_progress_callback=update_progress_Bar,
+                         on_complete_callback=complete_progress_bar)
             output.update(
                 output.get()+'\n'+f'downloading {yt.title} as {file_path}\\{file_name} ')
             print(yt.title, file_name, file_path)
@@ -31,7 +40,8 @@ def download_song(url, file_name, file_path, output):
                 yt.streams.get_audio_only().download()
             output.update(output.get()+'\n'+'success!')
         except Exception as e:
-            output.update(output.get()+'\n'+'failed... view error message below')
+            output.update(output.get()+'\n' +
+                          'failed... view error message below')
             output.update(output.get()+'\n'+f'{e.args}')
 
 
@@ -76,7 +86,7 @@ def create_single_song_layout(action):
               [sg.Text("download location:"), sg.Text(), sg.FolderBrowse(
                   key=f'-IN-{action}-path-')],
               [sg.Submit(key=f'-SUB-{action}-')],
-              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=20)],
+              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100)],
               [sg.Multiline(key=f'-OUT-{action}-', size=(50, 10))]]
     return sg.Column(layout, key=f'-COL-{action}-', visible=False)
 
@@ -86,7 +96,7 @@ def create_csv_layout(action):
               [sg.Text("csv location:"), sg.Text(), sg.FileBrowse(
                   key=f'-IN-{action}-file-', file_types=(("comma seperated values", "*.csv"),),)],
               [sg.Submit(key=f'-SUB-{action}-')],
-              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=20)],
+              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100)],
               [sg.Multiline(key=f'-OUT-{action}-',)]]
     return sg.Column(layout, key=f'-COL-{action}-', visible=False)
 
@@ -96,10 +106,12 @@ def create_playlist_layout(action):
               [sg.Text("youtube playlist URL:"),
                sg.InputText(key=f'-IN-{action}-url-')],
               [sg.Submit(key=f'-SUB-{action}-')],
-              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=20)],
+              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100)],
               [sg.Multiline(key=f'-OUT-{action}-',)]]
     return sg.Column(layout, key=f'-COL-{action}-', visible=False)
 
+
+# --------------------------------------------------------------------------------
 
 def main():
 
@@ -143,9 +155,10 @@ def main():
 
             MENU[current_action][1](window, current_action, values)
 
-
     window.close()
 
+
+# --------------------------------------------------------------------------
 
 if __name__ == '__main__':
     main()
