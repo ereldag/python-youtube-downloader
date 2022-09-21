@@ -6,6 +6,8 @@ name: Python application
 on:
   push:
     branches: ["master"]
+    tags:
+      - "v*"
 
 permissions:
   contents: read
@@ -43,5 +45,13 @@ jobs:
       - name: upload exe as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: work_dir
+          name: exe
           path: ./dist/yt_downloader.exe
+
+      - name: create release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            ./dist/yt_downloader.exe
