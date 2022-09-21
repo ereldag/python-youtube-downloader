@@ -96,8 +96,12 @@ def download_playlist(window, action, values, lock):
     # create playlist and download each song inside
     plist = Playlist(url)
 
+    write_output(output, lock, f'downloading playlist {plist.title}')
+
     for url in plist.video_urls:
         download_song(output, lock, url, file_path=file_path)
+
+    write_output(output, lock, f'finished downloading playlist {plist.title}')
 
 
 # ----------- functions to create the layouts this Window will display -----------
@@ -161,7 +165,8 @@ def main():
         menu_btns.append(sg.Button(action))
 
     # create window
-    window = sg.Window('youtube downloader', [cols, menu_btns])
+    window = sg.Window('youtube downloader', [
+                       cols, menu_btns], icon=r'icons/logo.ico')
 
     # create thread lock
     lock = threading.Lock()
