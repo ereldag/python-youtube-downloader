@@ -40,10 +40,10 @@ jobs:
 
       - name: convert to exe
         run: |
-          pyinstaller -n yt_downloader --noconsole yt_downloader.py
+          pyinstaller --noconsole --onefile -i "icons/logo.ico" --add-data "icons/logo.ico;icons" -n yt_downloader yt_downloader.py
 
       - name: upload exe as artifact
         uses: actions/upload-artifact@v3
         with:
           name: work_dir
-          path: ./
+          path: ./dist/yt_downloader.exe

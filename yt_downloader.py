@@ -6,7 +6,7 @@ from pytube import YouTube
 from pytube import Playlist
 import os
 import threading
-
+import sys
 # ----------- download functions -----------
 
 
@@ -164,9 +164,15 @@ def main():
         cols.append(func[0](action))
         menu_btns.append(sg.Button(action))
 
+    # add icon path after pyinstaller conversion
+    try:
+        icon_path = sys._MEIPASS + '\icons\logo.ico'
+    except:
+        icon_path = r'icons/logo.ico'
+
     # create window
     window = sg.Window('youtube downloader', [
-                       cols, menu_btns], icon=r'icons/logo.ico')
+                       cols, menu_btns], icon=icon_path)
 
     # create thread lock
     lock = threading.Lock()
