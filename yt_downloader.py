@@ -10,20 +10,22 @@ import sys
 # ----------- download functions -----------
 
 
-def write_output(output, lock, message):
+def write_output(output, lock, message="", newlines=1):
     lock.acquire()
-    output.update(output.get()+'\n'+message)
+    output.print(message+('\n'*newlines))
     lock.release()
 
 
-# change progress bar on download progress
-def update_progress_Bar(self, file_handle, bytes_remaining):
-    print(bytes_remaining)
+# update progress bar
+def update_progress_bar(pb, text, lock, finished, count):
+    lock.acquire()
 
+    # calculate percentage of completed songs
+    percent = round((finished/count)*100)
+    pb.update(percent)
+    text.update(f"finished {finished} out of {count}")
 
-# update stuff on completion
-def complete_progress_bar(stream, file_handle):
-    pass
+    lock.release()
 
 
 def download_song(output, lock, url, file_path, file_name=""):
@@ -34,8 +36,7 @@ def download_song(output, lock, url, file_path, file_name=""):
         # TODO: add validation output
     else:
         try:
-            yt = YouTube(url, on_progress_callback=update_progress_Bar,
-                         on_complete_callback=complete_progress_bar)
+            yt = YouTube(url)
 
             # give title to files with no name, and append .mp3 to file names without type
             if file_name == "":
@@ -46,19 +47,18 @@ def download_song(output, lock, url, file_path, file_name=""):
             # write output to gui
             write_output(
                 output, lock, f'downloading {yt.title} as {file_path}\\{file_name} ')
-            print(yt.title, file_name, file_path)
 
             # download
             yt.streams.get_audio_only().download(filename=file_name, output_path=file_path)
 
             # write success to gui
-            write_output(output, lock, 'success!')
+            write_output(output, lock, 'success!', newlines=2)
 
         except Exception as e:
 
             # write exception to gui
             write_output(output, lock, 'failed... view error message below')
-            write_output(output, lock, f'{e.args}')
+            write_output(output, lock, f'{e.args}', newlines=2)
 
 
 def download_single_song(window, action, values, lock):
@@ -69,14 +69,24 @@ def download_single_song(window, action, values, lock):
 
     # download song
     download_song(output, lock, url, file_path, file_name)
+    write_output(output, lock, newlines=2)
 
 
 def download_csv_songs(window, action, values, lock):
     csv_path = values[f'-IN-{action}-file-']
     output = window[f'-OUT-{action}-']
 
-    write_output(output, lock, f'reading csv {csv_path}...')
+    pb = window[f"-PROG-{action}-"]
+    pb_text = window[f"-PROG-TEXT-{action}-"]
 
+    with open(csv_path, newline='') as csv:
+        count = sum(1 for line in csv)
+
+    finished = 0
+
+    update_progress_bar(pb, pb_text, lock, finished, count)
+
+    write_output(output, lock, f'reading csv {csv_path}...')
     # read csv and download specified songs
     with open(csv_path, newline='') as csv:
         for line in reader(csv):
@@ -85,7 +95,10 @@ def download_csv_songs(window, action, values, lock):
             url = line[2]
             download_song(output, lock, url, file_path, file_name)
 
-    write_output(output, lock, f'finished reading {csv_path}')
+            finished += 1
+            update_progress_bar(pb, pb_text, lock, finished, count)
+
+    write_output(output, lock, f'finished reading {csv_path}!', newlines=2)
 
 
 def download_playlist(window, action, values, lock):
@@ -96,13 +109,21 @@ def download_playlist(window, action, values, lock):
     # create playlist and download each song inside
     plist = Playlist(url)
 
+    pb = window[f"-PROG-{action}-"]
+    pb_text = window[f"-PROG-TEXT-{action}-"]
+
+    count = plist.length
+    finished = 0
     write_output(output, lock, f'downloading playlist {plist.title}')
+    update_progress_bar(pb, pb_text, lock, finished, count)
 
     for url in plist.video_urls:
         download_song(output, lock, url, file_path=file_path)
+        finished += 1
+        update_progress_bar(pb, pb_text, lock, finished, count)
 
-    write_output(output, lock, f'finished downloading playlist {plist.title}')
-
+    write_output(
+        output, lock, f'finished downloading playlist {plist.title}!', newlines=2)
 
 # ----------- functions to create the layouts this Window will display -----------
 
@@ -117,7 +138,6 @@ def create_single_song_layout(action):
               [sg.Text("download location:"), sg.Text(), sg.FolderBrowse(
                   key=f'-IN-{action}-path-')],
               [sg.Submit(key=f'-SUB-{action}-')],
-              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100)],
               [sg.Multiline(key=f'-OUT-{action}-', size=(50, 10))]]
     return sg.Column(layout, key=f'-COL-{action}-', visible=False)
 
@@ -128,8 +148,9 @@ def create_csv_layout(action):
               [sg.Text("csv location:"), sg.Text(), sg.FileBrowse(
                   key=f'-IN-{action}-file-', file_types=(("comma seperated values", "*.csv"),),)],
               [sg.Submit(key=f'-SUB-{action}-')],
-              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100)],
-              [sg.Multiline(key=f'-OUT-{action}-', size=(50, 10))]]
+              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
+                              size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")],
+              [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10), autoscroll=True)]]
     return sg.Column(layout, key=f'-COL-{action}-', visible=False)
 
 
@@ -141,8 +162,9 @@ def create_playlist_layout(action):
               [sg.Text("download location:"), sg.Text(), sg.FolderBrowse(
                   key=f'-IN-{action}-path-')],
               [sg.Submit(key=f'-SUB-{action}-')],
-              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100)],
-              [sg.Multiline(key=f'-OUT-{action}-', size=(50, 10))]]
+              [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
+                              size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")],
+              [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10), autoscroll=True)]]
     return sg.Column(layout, key=f'-COL-{action}-', visible=False)
 
 
@@ -181,8 +203,6 @@ def main():
     current_action = ''  # The currently visible layout
     while True:
         event, values = window.read()
-        print('\n---------------------------\n')
-        print(event, values)
 
         # quit
         if event in (None, 'Exit'):
