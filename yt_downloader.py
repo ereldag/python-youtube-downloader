@@ -10,9 +10,10 @@ import sys
 # ----------- download functions -----------
 
 
-def write_output(output, message="", newlines=1):
+def write_output(message="", newlines=1):
     lock.acquire()
-    output.print(message+('\n'*newlines))
+    # output.print(message+('\n'*newlines))
+    window['-OUT-'].print(message+('\n'*newlines))
     lock.release()
 
 
@@ -28,11 +29,11 @@ def update_progress_bar(pb, text, finished, count):
     lock.release()
 
 
-def download_song(output, url, file_path, file_name=""):
+def download_song(url, file_path, file_name=""):
     if file_path == "":
         file_path = os.getcwd()
     if not os.path.exists(file_path):
-        write_output(output, 'failed - path not found!')
+        write_output('failed - path not found!')
         # TODO: add validation output
     else:
         try:
@@ -46,35 +47,33 @@ def download_song(output, url, file_path, file_name=""):
 
             # write output to gui
             write_output(
-                output, f'downloading {yt.title} as {file_path}\\{file_name} ')
+                f'downloading "{yt.title}" as "{file_path}\\{file_name}" ')
 
             # download
             yt.streams.get_audio_only().download(filename=file_name, output_path=file_path)
 
             # write success to gui
-            write_output(output, 'success!', newlines=2)
+            write_output('success!', newlines=2)
 
         except Exception as e:
 
             # write exception to gui
-            write_output(output, 'failed... view error message below')
-            write_output(output, f'{e.args}', newlines=2)
+            write_output('failed... view error message below')
+            write_output(f'{e.args}', newlines=2)
 
 
-def download_single_song(window, action, values):
+def download_single_song(action, values):
     url = values[f'-IN-{action}-URL-']
     file_name = values[f'-IN-{action}-name-']
     file_path = values[f'-IN-{action}-path-']
-    output = window[f'-OUT-{action}-']
 
     # download song
-    download_song(output, url, file_path, file_name)
-    write_output(output, newlines=2)
+    download_song(url, file_path, file_name)
+    write_output(newlines=2)
 
 
-def download_csv_songs(window, action, values):
+def download_csv_songs(action, values):
     csv_path = values[f'-IN-{action}-file-']
-    output = window[f'-OUT-{action}-']
 
     pb = window[f"-PROG-{action}-"]
     pb_text = window[f"-PROG-TEXT-{action}-"]
@@ -86,24 +85,23 @@ def download_csv_songs(window, action, values):
 
     update_progress_bar(pb, pb_text, finished, count)
 
-    write_output(output, f'reading csv {csv_path}...')
+    write_output(f'reading csv "{csv_path}"...')
     # read csv and download specified songs
     with open(csv_path, newline='') as csv:
         for line in reader(csv):
             file_name = line[0].replace('\t', '')
             file_path = line[1]
             url = line[2]
-            download_song(output, url, file_path, file_name)
+            download_song(url, file_path, file_name)
 
             finished += 1
             update_progress_bar(pb, pb_text, finished, count)
 
-    write_output(output, f'finished reading {csv_path}!', newlines=2)
+    write_output(f'finished reading "{csv_path}"!', newlines=2)
 
 
-def download_playlist(window, action, values):
+def download_playlist(action, values):
     url = values[f'-IN-{action}-url-']
-    output = window[f'-OUT-{action}-']
     file_path = values[f'-IN-{action}-path-']
 
     # create playlist and download each song inside
@@ -114,16 +112,16 @@ def download_playlist(window, action, values):
 
     count = plist.length
     finished = 0
-    write_output(output, f'downloading playlist {plist.title}')
+    write_output(f'downloading playlist "{plist.title}"')
     update_progress_bar(pb, pb_text, finished, count)
 
     for url in plist.video_urls:
-        download_song(output, url, file_path=file_path)
+        download_song(url, file_path=file_path)
         finished += 1
         update_progress_bar(pb, pb_text, finished, count)
 
     write_output(
-        output, f'finished downloading playlist {plist.title}!', newlines=2)
+        f'finished downloading playlist "{plist.title}"!', newlines=2)
 
 # ----------- functions to create the layouts this Window will display -----------
 
@@ -136,8 +134,7 @@ def create_single_song_layout(action):
             key=f'-IN-{action}-name-')],
         [sg.Text("Download location:", size=(15, 1), justification="left"), sg.Text(), sg.FolderBrowse(
             key=f'-IN-{action}-path-')],
-        [sg.Push(), sg.Submit(key=f'-SUB-{action}-'), sg.Push()],
-        [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10))]]
+        [sg.Push(), sg.Submit(key=f'-SUB-{action}-'), sg.Push()]]
     return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="l")
 
 
@@ -147,8 +144,7 @@ def create_csv_layout(action):
         key=f'-IN-{action}-file-', file_types=(("comma seperated values", "*.csv"),),)],
         [sg.Push(), sg.Submit(key=f'-SUB-{action}-'), sg.Push()],
         [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
-                        size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")],
-        [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10), autoscroll=True)]]
+                        size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")]]
     return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="l")
 
 
@@ -160,8 +156,7 @@ def create_playlist_layout(action):
                   key=f'-IN-{action}-path-')],
               [sg.Push(), sg.Submit(key=f'-SUB-{action}-'), sg.Push()],
               [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
-                              size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")],
-              [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10), autoscroll=True)]]
+                              size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")]]
     return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="l")
 
 
@@ -190,7 +185,9 @@ def main():
         icon_path = r'icons/logo.ico'
 
     # create window
-    window = sg.Window('youtube downloader', [[tabgrp]], icon=icon_path)
+    global window
+    window = sg.Window('youtube downloader', [[sg.Push(), tabgrp, sg.Push()], [sg.Push(), sg.Multiline(
+        key='-OUT-', size=(70, 10), autoscroll=True), sg.Push()]], icon=icon_path)
 
     # create thread lock
     global lock
@@ -208,7 +205,7 @@ def main():
         if str(event).find('-SUB-') != -1:
             current_action = values[0]
             threading.Thread(target=MENU[current_action][1], args=(
-                window, current_action, values)).start()
+                current_action, values)).start()
 
         print(
             f"\n\n------------------------------\n\naction: {values[0]}\nevent: {event}\nvalues: {values}")
