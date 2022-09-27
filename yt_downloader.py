@@ -133,8 +133,7 @@ def create_single_song_layout(action):
         [sg.Text("File name:", size=(15, 1)), sg.InputText(
             key=f'-IN-{action}-name-')],
         [sg.Text("Download location:", size=(15, 1), justification="left"), sg.Text(), sg.FolderBrowse(
-            key=f'-IN-{action}-path-')],
-        [sg.Push(), sg.Submit(key=f'-SUB-{action}-'), sg.Push()]]
+            key=f'-IN-{action}-path-')]]
     return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="l")
 
 
@@ -142,7 +141,6 @@ def create_single_song_layout(action):
 def create_csv_layout(action):
     layout = [[sg.Text("CSV location:", size=(15, 1)), sg.Text(), sg.FileBrowse(
         key=f'-IN-{action}-file-', file_types=(("comma seperated values", "*.csv"),),)],
-        [sg.Push(), sg.Submit(key=f'-SUB-{action}-'), sg.Push()],
         [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
                         size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")]]
     return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="l")
@@ -154,7 +152,6 @@ def create_playlist_layout(action):
                sg.InputText(key=f'-IN-{action}-url-')],
               [sg.Text("download location:", size=(15, 1)), sg.Text(), sg.FolderBrowse(
                   key=f'-IN-{action}-path-')],
-              [sg.Push(), sg.Submit(key=f'-SUB-{action}-'), sg.Push()],
               [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
                               size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")]]
     return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="l")
@@ -185,9 +182,12 @@ def main():
         icon_path = r'icons/logo.ico'
 
     # create window
+    layout = [[sg.Push(), tabgrp, sg.Push()],
+              [sg.Push(), sg.Multiline(
+                  key='-OUT-', size=(70, 10), autoscroll=True), sg.Push()],
+              [sg.Push(), sg.Submit(key='-SUB-'), sg.Push()]]
     global window
-    window = sg.Window('youtube downloader', [[sg.Push(), tabgrp, sg.Push()], [sg.Push(), sg.Multiline(
-        key='-OUT-', size=(70, 10), autoscroll=True), sg.Push()]], icon=icon_path)
+    window = sg.Window('youtube downloader', layout, icon=icon_path)
 
     # create thread lock
     global lock
@@ -202,7 +202,7 @@ def main():
             break
 
         # call current tab download func
-        if str(event).find('-SUB-') != -1:
+        if str(event) == '-SUB-':
             current_action = values[0]
             threading.Thread(target=MENU[current_action][1], args=(
                 current_action, values)).start()
