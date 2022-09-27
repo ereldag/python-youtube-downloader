@@ -130,34 +130,31 @@ def download_playlist(window, action, values, lock):
 
 # layout for single song
 def create_single_song_layout(action):
-    layout = [[sg.Text(action)],
-              [sg.Text("youtube song URL:"), sg.InputText(
+    layout = [[sg.Text("youtube song URL:"), sg.InputText(
                   key=f'-IN-{action}-URL-')],
               [sg.Text("file name:"), sg.InputText(
                   key=f'-IN-{action}-name-')],
               [sg.Text("download location:"), sg.Text(), sg.FolderBrowse(
                   key=f'-IN-{action}-path-')],
               [sg.Submit(key=f'-SUB-{action}-')],
-              [sg.Multiline(key=f'-OUT-{action}-', size=(50, 10))]]
-    return sg.Column(layout, key=f'-COL-{action}-', visible=False)
+              [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10))]]
+    return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="center")
 
 
 # layout for csv
 def create_csv_layout(action):
-    layout = [[sg.Text(action)],
-              [sg.Text("csv location:"), sg.Text(), sg.FileBrowse(
+    layout = [[sg.Text("csv location:"), sg.Text(), sg.FileBrowse(
                   key=f'-IN-{action}-file-', file_types=(("comma seperated values", "*.csv"),),)],
               [sg.Submit(key=f'-SUB-{action}-')],
               [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
                               size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")],
               [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10), autoscroll=True)]]
-    return sg.Column(layout, key=f'-COL-{action}-', visible=False)
+    return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="center")
 
 
 # layout for playlist
 def create_playlist_layout(action):
-    layout = [[sg.Text(action)],
-              [sg.Text("youtube playlist URL:"),
+    layout = [[sg.Text("youtube playlist URL:"),
                sg.InputText(key=f'-IN-{action}-url-')],
               [sg.Text("download location:"), sg.Text(), sg.FolderBrowse(
                   key=f'-IN-{action}-path-')],
@@ -165,7 +162,7 @@ def create_playlist_layout(action):
               [sg.ProgressBar(key=f'-PROG-{action}-', max_value=100,
                               size=(30, 15)), sg.Text(key=f"-PROG-TEXT-{action}-")],
               [sg.Multiline(key=f'-OUT-{action}-', size=(70, 10), autoscroll=True)]]
-    return sg.Column(layout, key=f'-COL-{action}-', visible=False)
+    return sg.Tab(action, layout, key=f'{action}', border_width=10, element_justification="center")
 
 
 # --------------------------------------------------------------------------------
@@ -180,11 +177,11 @@ def main():
             "download songs from csv": [create_csv_layout, download_csv_songs],
             "download playlist": [create_playlist_layout, download_playlist]}
 
-    cols = []
-    menu_btns = []
+    tabs = []
     for action, func in MENU.items():
-        cols.append(func[0](action))
-        menu_btns.append(sg.Button(action))
+        tabs.append(func[0](action))
+    tabgrp = sg.TabGroup([tabs], tab_location="centertop",
+                         border_width=5, enable_events=True)
 
     # add icon path after pyinstaller conversion
     try:
@@ -193,8 +190,7 @@ def main():
         icon_path = r'icons/logo.ico'
 
     # create window
-    window = sg.Window('youtube downloader', [
-                       cols, menu_btns], icon=icon_path)
+    window = sg.Window('youtube downloader', [[tabgrp]], icon=icon_path)
 
     # create thread lock
     lock = threading.Lock()
@@ -209,17 +205,19 @@ def main():
             break
 
         # switch layout upon button press
-        if event in MENU.keys():
-            if current_action != '':
-                window[f'-COL-{current_action}-'].update(visible=False)
-            current_action = event
-            window[f'-COL-{current_action}-'].update(visible=True)
-
-        # call current action download func
+        if event == 0:
+            # if current_action != '':
+            #    window[f'-COL-{current_action}-'].update(visible=False)
+            current_action = values[event]
+        
+        
+        # call current tab download func
         elif event.find('-SUB-') != -1:
             threading.Thread(target=MENU[current_action][1], args=(
                 window, current_action, values, lock)).start()
 
+        print(f"action: {current_action} event: {event} values: {values}")
+        
     window.close()
 
 
