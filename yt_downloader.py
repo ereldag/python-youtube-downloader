@@ -7,10 +7,13 @@ from pytube import Playlist
 import os
 import threading
 import sys
+from mutagen.easyid3 import EasyID3
+from moviepy.editor import *
 # ----------- download functions -----------
 
 
 def write_output(message="", newlines=1):
+
     lock.acquire()
     # output.print(message+('\n'*newlines))
     window['-OUT-'].print(message+('\n'*newlines))
@@ -41,9 +44,9 @@ def download_song(url, file_path, file_name=""):
 
             # give title to files with no name, and append .mp3 to file names without type
             if file_name == "":
-                file_name = yt.title + ".mp3"
+                file_name = yt.title + ".mp4"
             elif '.' not in file_name:
-                file_name = file_name + ".mp3"
+                file_name = file_name + ".mp4"
 
             # write output to gui
             write_output(
@@ -51,6 +54,16 @@ def download_song(url, file_path, file_name=""):
 
             # download
             yt.streams.get_audio_only().download(filename=file_name, output_path=file_path)
+
+            mp4_without_frames = AudioFileClip(rf"{file_path}\{file_name}")
+            mp4_without_frames.write_audiofile(
+                rf"{file_path}\{file_name}".replace('mp4', 'mp3'))
+            mp4_without_frames.close()
+            os.remove(rf"{file_path}\\{file_name}")
+            f = EasyID3(rf"{file_path}\\{file_name}".replace('mp4', 'mp3'))
+            f['title'] = yt.title
+            f['artist'] = yt.author
+            f.save()
 
             # write success to gui
             write_output('success!', newlines=2)

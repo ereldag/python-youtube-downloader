@@ -6,7 +6,7 @@ This tool can:
     convert multiple songs listed in a csv file
     download entire playlists
 
-## Author Information
+# Author Information
 
 <b>Erel Dagan, DevOps Engineer.</b><br>
 <b>Email:</b> ereldag18@gmail.com<br>

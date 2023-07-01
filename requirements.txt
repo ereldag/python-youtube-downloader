@@ -1,2 +1,4 @@
 pytube
 pysimplegui
+mutagen
+moviepy
