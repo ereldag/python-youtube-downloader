@@ -32,7 +32,7 @@ def update_progress_bar(pb, text, finished, count):
     lock.release()
 
 
-def download_song(url, file_path, file_name=""):
+def download_song(url, count, file_path, file_name=""):
     if file_path == "":
         file_path = os.getcwd()
     if not os.path.exists(file_path):
@@ -47,7 +47,7 @@ def download_song(url, file_path, file_name=""):
                 file_name = yt.title + ".mp4"
             elif '.' not in file_name:
                 file_name = file_name + ".mp4"
-
+            file_name = f"{count:03}-"+file_name
             # write output to gui
             write_output(
                 f'downloading "{yt.title}" as "{file_path}\\{file_name}" ')
@@ -129,7 +129,8 @@ def download_playlist(action, values):
     update_progress_bar(pb, pb_text, finished, count)
 
     for url in plist.video_urls:
-        download_song(url, file_path=file_path)
+
+        download_song(url, file_path=file_path, count=(finished+1))
         finished += 1
         update_progress_bar(pb, pb_text, finished, count)
 
